@@ -4,11 +4,10 @@ Download and stream historical price data for a variety of financial instruments
 
 ## Documentation
 - [Python](./python)
-- [Go*](./go)
-- [Dart*](./dart)
-- [Typescript*](./typecsript)
+- [Go](./go)
+- [Dart](./dart)
+- [Typescript](./typecsript)
 
-Not yet implemented *
 
 ## Contributing
 1. Fork the repository.

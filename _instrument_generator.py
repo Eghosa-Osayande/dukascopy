@@ -262,7 +262,8 @@ if __name__ == "__main__":
 
   transformID = lambda x:x.replace("/","_").replace(".","_").replace("&","_").replace(" ","_").replace("-","_")
 
-  output=""
+  py_output=""
+  go_output=""
 
   for group in groups.values():
     instruments=group.get("instruments")
@@ -272,7 +273,11 @@ if __name__ == "__main__":
     for instrument in instruments:
       variableName= transformID(instrument)
       "".upper()
-      output+=f'''INSTRUMENT_{id.upper()}_{variableName.upper()} = "{instrument}"\n'''
+      py_output+=f'''INSTRUMENT_{id.upper()}_{variableName.upper()} = "{instrument}"\n'''
+      go_output+=f'''const INSTRUMENT_{id.upper()}_{variableName.upper()} = "{instrument}"\n'''
 
-  with open("instruments.py","w") as fd:
-      fd.write(output)
+  with open("python/dukascript/instruments.py","w") as fd:
+      fd.write(py_output)
+  with open("go/instruments.go","w") as fd:
+      fd.write("package dukascript\n\n")
+      fd.write(go_output)

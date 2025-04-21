@@ -44,6 +44,7 @@ _interval_units = {
     INTERVAL_SEC_30: TIME_UNIT_SEC,
     INTERVAL_SEC_10: TIME_UNIT_SEC,
     INTERVAL_SEC_1: TIME_UNIT_SEC,
+    INTERVAL_TICK: TIME_UNIT_TICK,
 }
 
 OFFER_SIDE_BID = "B"
@@ -164,7 +165,7 @@ def _fetch(
         "Referer": "https://freeserv.dukascopy.com/2.0/?path=chart/index&showUI=true&showTabs=true&showParameterToolbar=true&showOfferSide=true&allowInstrumentChange=true&allowPeriodChange=true&allowOfferSideChange=true&showAdditionalToolbar=true&showExportImportWorkspace=true&allowSocialSharing=true&showUndoRedoButtons=true&showDetachButton=true&presentationType=candle&axisX=true&axisY=true&legend=true&timeline=true&showDateSeparators=true&showZoom=true&showScrollButtons=true&showAutoShiftButton=true&crosshair=true&borders=false&freeMode=false&theme=Pastelle&uiColor=%23000&availableInstruments=l%3A&instrument=EUR/USD&period=5&offerSide=BID&timezone=0&live=true&allowPan=true&width=100%25&height=700&adv=popup&lang=en",
     }
 
-    logger.debug("query params: %s", query_params)
+    # logger.debug("query params: %s", query_params)
 
     response = requests.get(base_url, headers=headers, params=query_params)
 
