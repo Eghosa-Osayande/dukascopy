@@ -8,7 +8,7 @@ Download and stream historical price data for a variety of financial instruments
 - [Dart*](./dart)
 - [Typescript*](./typecsript)
 
-not yet implemented *
+Not yet implemented *
 
 ## Contributing
 1. Fork the repository.
