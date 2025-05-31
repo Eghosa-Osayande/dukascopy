@@ -7,6 +7,7 @@ Download and stream historical price data for a variety of financial instruments
 - [Go](https://github.com/Eghosa-Osayande/dukascopy-go)
 - [Dart](./dart)
 - [Typescript](./typescript)
+- [Rust](./rust)
 
 
 ## Contributing

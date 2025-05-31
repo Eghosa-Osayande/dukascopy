@@ -1,0 +1,26 @@
+[package]
+name = "dukascopy_rust"
+version = "0.2.0"
+authors = ["Fona Erhabor osaofonaerhabor@gmail.com"]
+edition = "2021"
+description = "Rust wrapper for Dukascopy’s free charting API"
+license = "MIT"
+repository = "https://github.com/Erhabor-Fona/dukascopy_rust"
+homepage = "https://github.com/Erhabor-Fona/dukascopy_rust"
+documentation = "https://docs.rs/dukascopy_rust"
+readme = "README.md"
+keywords = ["dukascopy", "finance", "api", "market-data", "trading"]
+categories = ["api-bindings", "finance", "trading"]
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+rand = "0.8"
+chrono = { version = "0.4", features = ["clock"] }
+
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

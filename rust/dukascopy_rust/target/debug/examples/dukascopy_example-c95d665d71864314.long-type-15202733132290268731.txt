@@ -1,0 +1,4 @@
+futures_util::unfold_state::_::__Origin<'_, (i64, bool), {async block@stream::{closure#0}::{closure#0}}>
+futures_util::unfold_state::UnfoldState<(i64, bool), {async block@stream::{closure#0}::{closure#0}}>
+futures::stream::unfold::_::__Origin<'_, (i64, bool), {closure@stream::{closure#0}}, {async block@stream::{closure#0}::{closure#0}}>
+futures::stream::Unfold<(i64, bool), {closure@stream::{closure#0}}, {async block@stream::{closure#0}::{closure#0}}>

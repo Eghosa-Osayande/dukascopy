@@ -1,0 +1,1 @@
+/Users/user/project/dukascopy/rust/dukascopy_rust/target/debug/libdukascopy_rust.rlib: /Users/user/project/dukascopy/rust/dukascopy_rust/src/dukascopy_base.rs /Users/user/project/dukascopy/rust/dukascopy_rust/src/instrument_generator.rs /Users/user/project/dukascopy/rust/dukascopy_rust/src/lib.rs /Users/user/project/dukascopy/rust/dukascopy_rust/src/models.rs
