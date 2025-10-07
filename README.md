@@ -4,9 +4,10 @@ Download and stream historical price data for a variety of financial instruments
 
 ## Documentation
 - [Python](./python) [![PyPI Downloads](https://static.pepy.tech/badge/dukascopy-python)](https://pepy.tech/projects/dukascopy-python)
+
+### Others
 - [Go](https://github.com/Eghosa-Osayande/dukascopy-go)
 - [Dart](./dart)
-- [Typescript](./typescript)
 
 
 ## Contributing
