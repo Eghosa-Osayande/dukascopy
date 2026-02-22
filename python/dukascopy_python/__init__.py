@@ -137,6 +137,7 @@ def _fetch(
     last_update: int,
     logger: logging.Logger = logging.getLogger(),
     limit: int = None,
+    
 ):
     characters = string.ascii_letters + string.digits
     jsonp = f"_callbacks____{''.join(random.choices(characters, k=9))}"
@@ -183,6 +184,7 @@ def _stream(
     max_retries: int = 7,
     limit: int = None,
     logger: logging.Logger = logging.getLogger(),
+    disableInfoLogs=false,
 ):
     no_of_retries = 0
     cursor = int(start.timestamp() * 1000)
@@ -191,9 +193,9 @@ def _stream(
         end_timestamp = end.timestamp() * 1000
 
     is_first_iteration = True
-
-    logging.info(f"Start Date :{start.isoformat()}")
-    logging.info(f"End Date :{'' if end is None else end.isoformat()}")
+    if !disableInfoLogs:
+        logging.info(f"Start Date :{start.isoformat()}")
+        logging.info(f"End Date :{'' if end is None else end.isoformat()}")
 
     while True:
         try:
@@ -257,6 +259,7 @@ def fetch(
     max_retries: int = 7,
     limit: int = 30_000,  # max 30_000
     debug=False,
+    disableInfoLogs=false
 ):
     logger = _get_custom_logger(debug)
     time_unit = _interval_units[interval]
@@ -341,6 +344,7 @@ def live_fetch(
         max_retries=max_retries,
         limit=limit,
         logger=logger,
+        disableInfoLogs=disableInfoLogs
     )
 
     yield df
