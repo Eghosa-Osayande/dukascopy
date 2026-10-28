@@ -16,6 +16,7 @@ from ...core import (
     slice_by_time,
     round_candles,
     debug,
+    get_logger,
 )
 
 
@@ -295,6 +296,7 @@ class DataFeedV2(DataFeed):
     ):
         self.api = ApiV2(session)
 
+
     def _fetch_data(
         self,
         instrument: str,
@@ -302,104 +304,155 @@ class DataFeedV2(DataFeed):
         offer_side: OfferSide,
         start_utc: datetime,
         end_utc: datetime,
-        aggregrator: Callable[[Iterable], Iterable] | None,
+        aggregrator: Callable[[Iterable], Iterable] | None = None,
     ):
+        logger = get_logger()
         now_utc = datetime.now(timezone.utc)
 
         data = []
 
-        if (
-            time_unit == TimeUnit.MONTH
-            or time_unit == TimeUnit.WEEK
-            or time_unit == TimeUnit.DAY
-        ):
-
-            start_of_year = now_utc.replace(
-                month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-            )
-
+        # Resolve the API download granularity.
+        if time_unit in (TimeUnit.MONTH, TimeUnit.WEEK, TimeUnit.DAY):
+            unit = TimeUnit.DAY
             cursor = start_utc.replace(
-                month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+                month=1, day=1, hour=0, minute=0,
+                second=0, microsecond=0,
+            )
+            current = now_utc.replace(
+                month=1, day=1, hour=0, minute=0,
+                second=0, microsecond=0,
             )
 
-            while cursor <= start_of_year and cursor <= end_utc:
-                debug("get ", cursor)
-                candles = self.api.get_candles(
-                    instrument=instrument,
-                    time_unit=TimeUnit.DAY,
-                    offer_side=offer_side,
-                    start=None if cursor < start_of_year else start_of_year,
-                    year=cursor.year if cursor < start_of_year else None,
-                )
-                data.extend(candles)
-                cursor = cursor.replace(year=cursor.year + 1)
+            def advance(dt):
+                return dt.replace(year=dt.year + 1)
 
-        if time_unit == TimeUnit.HOUR:
-            start_of_month = now_utc.replace(
-                day=1, hour=0, minute=0, second=0, microsecond=0
+        elif time_unit == TimeUnit.HOUR:
+            unit = TimeUnit.HOUR
+            cursor = start_utc.replace(
+                day=1, hour=0, minute=0,
+                second=0, microsecond=0,
+            )
+            current = now_utc.replace(
+                day=1, hour=0, minute=0,
+                second=0, microsecond=0,
             )
 
-            cursor = start_utc.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            def advance(dt):
+                return dt.replace(
+                    year=dt.year + (dt.month == 12),
+                    month=(dt.month % 12) + 1,
+                )
 
-            while cursor <= start_of_month and cursor <= end_utc:
-                debug("get ", cursor)
-                candles = self.api.get_candles(
+        elif time_unit == TimeUnit.MINUTE:
+            unit = TimeUnit.MINUTE
+            cursor = start_utc.replace(
+                hour=0, minute=0, second=0, microsecond=0,
+            )
+            current = now_utc.replace(
+                hour=0, minute=0, second=0, microsecond=0,
+            )
+
+            def advance(dt):
+                return dt + timedelta(days=1)
+
+        elif time_unit == TimeUnit.SECOND:
+            unit = TimeUnit.SECOND
+            cursor = start_utc.replace(
+                minute=0, second=0, microsecond=0,
+            )
+            current = now_utc.replace(
+                minute=0, second=0, microsecond=0,
+            )
+
+            def advance(dt):
+                return dt + timedelta(hours=1)
+
+        else:
+            raise ValueError(f"Unsupported time unit: {time_unit}")
+
+        # Build the list of periods to download.
+        periods = []
+        while cursor < end_utc and cursor <= current:
+            periods.append(cursor)
+            cursor = advance(cursor)
+
+        total = len(periods)
+
+        logger.info(
+            "Downloading %s | %s to %s | %d batches",
+            instrument,
+            start_utc.isoformat(),
+            end_utc.isoformat(),
+            total,
+        )
+
+        for index, cursor in enumerate(periods, start=1):
+            is_current = cursor == current
+
+            if unit == TimeUnit.DAY:
+                kwargs = {
+                    "year": cursor.year if not is_current else None,
+                }
+
+            elif unit == TimeUnit.HOUR:
+                kwargs = {
+                    "year": cursor.year if not is_current else None,
+                    "month": cursor.month if not is_current else None,
+                }
+
+            elif unit == TimeUnit.MINUTE:
+                kwargs = {
+                    "year": cursor.year if not is_current else None,
+                    "month": cursor.month if not is_current else None,
+                    "day": cursor.day if not is_current else None,
+                }
+
+            else:
+                kwargs = {
+                    "year": cursor.year if not is_current else None,
+                    "month": cursor.month if not is_current else None,
+                    "day": cursor.day if not is_current else None,
+                    "hour": cursor.hour if not is_current else None,
+                }
+
+            if unit == TimeUnit.SECOND:
+                batch = self.api.get_ticks(
                     instrument=instrument,
-                    time_unit=TimeUnit.HOUR,
+                    start=current if is_current else None,
+                    **kwargs,
+                )
+            else:
+                batch = self.api.get_candles(
+                    instrument=instrument,
+                    time_unit=unit,
                     offer_side=offer_side,
-                    start=None if cursor < start_of_month else start_of_month,
-                    year=cursor.year if cursor < start_of_month else None,
-                    month=cursor.month if cursor < start_of_month else None,
-                )
-                data.extend(candles)
-
-                cursor = cursor.replace(
-                    year=cursor.year + (cursor.month == 12),
-                    month=(cursor.month % 12) + 1,
+                    start=current if is_current else None,
+                    **kwargs,
                 )
 
-        if time_unit == TimeUnit.MINUTE:
-            start_of_day = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+            data.extend(batch)
 
-            cursor = start_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+            logger.info(
+                "Download progress: %.1f%% | %d/%d batches | %d records",
+                index / total * 100,
+                index,
+                total,
+                len(data),
+            )
 
-            while cursor <= start_of_day and cursor <= end_utc:
-                debug("get ", cursor)
-                candles = self.api.get_candles(
-                    instrument=instrument,
-                    time_unit=TimeUnit.MINUTE,
-                    offer_side=offer_side,
-                    start=None if cursor < start_of_day else start_of_day,
-                    year=cursor.year if cursor < start_of_day else None,
-                    month=cursor.month if cursor < start_of_day else None,
-                    day=cursor.day if cursor < start_of_day else None,
-                )
-                data.extend(candles)
+        logger.info(
+            "Download complete: %d records in %d batches",
+            len(data),
+            total,
+        )
 
-                cursor = cursor + timedelta(days=1)
-
-        if time_unit == TimeUnit.SECOND:
-            start_of_hour = now_utc.replace(minute=0, second=0, microsecond=0)
-
-            cursor = start_utc.replace(minute=0, second=0, microsecond=0)
-
-            while cursor <= start_of_hour and cursor <= end_utc:
-                debug("get ", cursor)
-                candles = self.api.get_ticks(
-                    instrument=instrument,
-                    start=None if cursor < start_of_hour else start_of_hour,
-                    year=cursor.year if cursor < start_of_hour else None,
-                    month=cursor.month if cursor < start_of_hour else None,
-                    day=cursor.day if cursor < start_of_hour else None,
-                    hour=cursor.hour if cursor < start_of_hour else None,
-                )
-                data.extend(candles)
-
-                cursor = cursor + timedelta(hours=1)
         data = slice_by_time(data, start_utc, end_utc)
-        if aggregrator:
+
+        if aggregrator is not None:
             data = aggregrator(data)
+
         return data
+
 
     def fetch_candles(
         self,

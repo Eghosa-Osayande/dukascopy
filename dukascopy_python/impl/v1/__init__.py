@@ -6,7 +6,7 @@ import string
 from datetime import datetime, timezone
 
 
-from ...core import TimeUnit, OfferSide, Candle, Tick, DataFeed, debug
+from ...core import TimeUnit, OfferSide, Candle, Tick, DataFeed, debug, get_logger
 
 
 class ApiV1:
@@ -164,6 +164,7 @@ class DataFeedV1(DataFeed):
 
         self.api = ApiV1(session)
 
+
     def _fetch_data(
         self,
         instrument: str,
@@ -174,15 +175,27 @@ class DataFeedV1(DataFeed):
         end_utc: datetime,
         fetch_ticks: bool,
     ):
+        logger = get_logger()
 
         data = []
-
         cursor = start_utc
         is_first_iteration = True
+        batch_count = 0
+
+        total_seconds = (end_utc - start_utc).total_seconds()
+        data_type = "ticks" if fetch_ticks else "candles"
+
+        logger.info(
+            "Downloading %s | %s | %s to %s",
+            instrument,
+            data_type,
+            start_utc.isoformat(),
+            end_utc.isoformat(),
+        )
 
         while True:
-            debug("fetching from", cursor)
-            results = []
+            debug("Fetching from", cursor)
+
             if fetch_ticks:
                 results = self.api.get_ticks(
                     instrument=instrument,
@@ -202,36 +215,72 @@ class DataFeedV1(DataFeed):
                     limit=None,
                 )
 
-            if len(results) == 0:
+            if not results:
                 break
 
-            start_index, end_index = 0, len(results)
+            batch_count += 1
+
+            start_index = 0
 
             if (
                 not is_first_iteration
-                and len(results) > 0
                 and results[0].timestamp == cursor
             ):
                 if len(results) == 1:
                     break
+
                 start_index = 1
 
+            previous_cursor = cursor
             is_complete = True
-            for index in range(start_index, end_index):
-                candle = results[index]
 
-                if candle.timestamp >= end_utc:
+            for item in results[start_index:]:
+                if item.timestamp >= end_utc:
                     break
 
-                data.append(candle)
-
-                cursor = candle.timestamp
+                data.append(item)
+                cursor = item.timestamp
             else:
-                is_first_iteration = False
                 is_complete = False
+
+            is_first_iteration = False
+
+            # Percentage of requested time range covered.
+            elapsed_seconds = (
+                cursor - start_utc
+            ).total_seconds()
+
+            progress = min(
+                100.0,
+                max(0.0, elapsed_seconds / total_seconds * 100),
+            )
+
+            logger.info(
+                "Download progress: %.1f%% | %d batches | "
+                "%d records | %s",
+                progress,
+                batch_count,
+                len(data),
+                cursor.isoformat(),
+            )
 
             if is_complete:
                 break
+
+            # Prevent repeated requests without cursor advancement.
+            if cursor <= previous_cursor:
+                logger.warning(
+                    "Download stopped: cursor did not advance at %s",
+                    cursor.isoformat(),
+                )
+                break
+
+        logger.info(
+            "Download complete: %d %s in %d batches",
+            len(data),
+            data_type,
+            batch_count,
+        )
 
         return data
 
