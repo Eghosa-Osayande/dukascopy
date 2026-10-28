@@ -4,5 +4,7 @@ __pycache__/
 .DS_Store
 out*.csv
 out*.json
-
+dist/
+dukascript.egg-info/
 *.egg-info
+z.ipynb
