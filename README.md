@@ -1,4 +1,5 @@
 # dukascopy-python
+[![PyPI Downloads](https://static.pepy.tech/badge/dukascopy-python)](https://pepy.tech/projects/dukascopy-python)
 
 Download historical financial market data from [Dukascopy Bank SA](https://www.dukascopy.com), including tick-level prices and OHLCV candles for Forex, commodities, indices, and other financial instruments.
 
