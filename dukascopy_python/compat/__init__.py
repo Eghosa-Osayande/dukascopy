@@ -1,4 +1,3 @@
-import pandas as pd
 import requests
 from datetime import datetime, timedelta
 import json
@@ -49,6 +48,21 @@ _interval_units = {
 
 OFFER_SIDE_BID = "B"
 OFFER_SIDE_ASK = "A"
+
+
+def _require_pandas():
+    """Import optional pandas dependency only when DataFrame output is needed."""
+    try:
+        import pandas as pd
+    except ModuleNotFoundError as exc:
+        if exc.name == "pandas":
+            raise ImportError(
+                "pandas is required for fetch() and live_fetch(). "
+                "Install it with `pip install pandas` or your package's "
+                "optional pandas extra."
+            ) from exc
+        raise
+    return pd
 
 
 def _get_custom_logger(debug=False):
@@ -258,6 +272,7 @@ def fetch(
     limit: int = 30_000,  # max 30_000
     debug=False,
 ):
+    pd = _require_pandas()
     logger = _get_custom_logger(debug)
     time_unit = _interval_units[interval]
     columns = _get_dataframe_columns_for_timeunit(time_unit)
@@ -299,6 +314,7 @@ def live_fetch(
     limit: int = 30_000,  # max 30_000
     debug=False,
 ):
+    pd = _require_pandas()
     logger = _get_custom_logger(debug)
     assert interval_value > 0
 
