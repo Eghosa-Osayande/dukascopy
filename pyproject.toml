@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dukascopy-python"
-version = "4.0.1"
+version = "5.0.0"
 description = "Download and stream historical price data for variety of financial instruments (Forex, Commodities and Indices) from Dukascopy Bank SA."
 readme = "README.md"
 authors = [
@@ -20,7 +20,6 @@ classifiers = [
 ]
 keywords = ["tick-data", "forex-data", "tick-api", "ticks", "dukascopy"]
 dependencies = [
-  'pandas',
 	'requests'
 ]
 requires-python = ">=3.10"
