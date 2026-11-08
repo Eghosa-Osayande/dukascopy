@@ -241,7 +241,7 @@ class ApiV2:
                         t / 1000,
                         tz=timezone.utc,
                     ),
-                    open=round(o),
+                    open=o,
                     high=h,
                     low=l,
                     close=c,
