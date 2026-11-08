@@ -41,9 +41,9 @@ def set_default_version(version: int):
 
 def _create_data_feed(
     version: int,
-    session: requests.Session,
+    session: "requests.Session",
     **kw,
-) -> DataFeed:
+) -> "DataFeed":
 
     if version == 1:
         from dukascopy_python.impl.v1 import DataFeedV1
