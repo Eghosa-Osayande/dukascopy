@@ -499,7 +499,7 @@ class DataFeedV2(DataFeed):
             ):
                 debug("aggregrating", interval, time_unit)
                 agg = aggregate_candles(
-                    data,
+                    v,
                     interval,
                     time_unit,
                 )
